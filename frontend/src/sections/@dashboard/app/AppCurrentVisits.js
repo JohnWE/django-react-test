@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import ReactApexChart from 'react-apexcharts';
 // @mui
@@ -34,19 +35,42 @@ const StyledChartWrapper = styled('div')(({ theme }) => ({
 AppCurrentVisits.propTypes = {
   title: PropTypes.string,
   subheader: PropTypes.string,
-  chartColors: PropTypes.arrayOf(PropTypes.string),
-  chartData: PropTypes.array,
 };
 
-export default function AppCurrentVisits({ title, subheader, chartColors, chartData, ...other }) {
+export default function AppCurrentVisits({ title, subheader, ...other }) {
   const theme = useTheme();
+  const [chartData, setChartData] = useState([
+    { label: 'America', value: 4344 },
+    { label: 'Asia', value: 5435 },
+    { label: 'Europe', value: 1443 },
+    { label: 'Africa', value: 4443 },
+  ]);
+
+  useEffect(() => {
+    fetch("http://localhost:8000/visits/current_visits/?format=json")
+      .then(res => res.json())
+      .then(res => res.map(s => ({
+        label: s.country,
+        value: s.visits,
+      })))
+      .then(
+        (result) => {
+          setChartData(result);
+        },
+        // Note: it's important to handle errors here
+        // instead of a catch() block so that we don't swallow
+        // exceptions from actual bugs in components.
+        (error) => {
+          console.error(error);
+        }
+      )
+  }, [])
 
   const chartLabels = chartData.map((i) => i.label);
 
   const chartSeries = chartData.map((i) => i.value);
 
   const chartOptions = useChart({
-    colors: chartColors,
     labels: chartLabels,
     stroke: { colors: [theme.palette.background.paper] },
     legend: { floating: true, horizontalAlign: 'center' },
